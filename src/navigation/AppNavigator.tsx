@@ -5,10 +5,10 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { RootStackParamList, TabParamList } from '../types';
 import DashboardScreen from '../screens/DashboardScreen';
-import ExpensesScreen from '../screens/ExpensesScreen';
+import TransactionsScreen from '../screens/TransactionsScreen';
 import AnalyticsScreen from '../screens/AnalyticsScreen';
-import AddExpenseScreen from '../screens/AddExpenseScreen';
-import EditExpenseScreen from '../screens/EditExpenseScreen';
+import AddTransactionScreen from '../screens/AddTransactionScreen';
+import EditTransactionScreen from '../screens/EditTransactionScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<TabParamList>();
@@ -45,10 +45,10 @@ function MainTabs() {
         }}
       />
       <Tab.Screen
-        name="Expenses"
-        component={ExpensesScreen}
+        name="Transactions"
+        component={TransactionsScreen}
         options={{
-          tabBarIcon: ({ focused }) => <TabIcon icon="📋" focused={focused} />,
+          tabBarIcon: ({ focused }) => <TabIcon icon="💳" focused={focused} />,
         }}
       />
       <Tab.Screen
@@ -68,13 +68,13 @@ export default function AppNavigator() {
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         <Stack.Screen name="MainTabs" component={MainTabs} />
         <Stack.Screen
-          name="AddExpense"
-          component={AddExpenseScreen}
+          name="AddTransaction"
+          component={AddTransactionScreen}
           options={{ presentation: 'modal' }}
         />
         <Stack.Screen
-          name="EditExpense"
-          component={EditExpenseScreen}
+          name="EditTransaction"
+          component={EditTransactionScreen}
           options={{ presentation: 'modal' }}
         />
       </Stack.Navigator>

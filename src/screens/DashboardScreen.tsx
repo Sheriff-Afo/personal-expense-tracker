@@ -12,7 +12,7 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { BarChart } from 'react-native-chart-kit';
 import { loadExpenses } from '../storage/expenseStorage';
-import { Expense, RootStackParamList } from '../types';
+import { Transaction, RootStackParamList } from '../types';
 import { getCategoryMeta } from '../constants/categories';
 import StatCard from '../components/StatCard';
 
@@ -20,69 +20,62 @@ type Nav = NativeStackNavigationProp<RootStackParamList>;
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
-function getMonthlyData(expenses: Expense[]) {
-  const months: { label: string; total: number }[] = [];
+function getMonthlyData(transactions: Transaction[]) {
   const now = new Date();
-  for (let i = 5; i >= 0; i--) {
-    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+  return Array.from({ length: 6 }, (_, i) => {
+    const d = new Date(now.getFullYear(), now.getMonth() - (5 - i), 1);
     const label = d.toLocaleDateString('en-US', { month: 'short' });
-    const total = expenses
-      .filter((e) => {
-        const ed = new Date(e.date);
-        return ed.getFullYear() === d.getFullYear() && ed.getMonth() === d.getMonth();
-      })
-      .reduce((sum, e) => sum + e.amount, 0);
-    months.push({ label, total });
-  }
-  return months;
+    const inMonth = transactions.filter((t) => {
+      const td = new Date(t.date);
+      return td.getFullYear() === d.getFullYear() && td.getMonth() === d.getMonth();
+    });
+    const income = inMonth.filter((t) => t.type === 'income').reduce((s, t) => s + t.amount, 0);
+    const expense = inMonth.filter((t) => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+    return { label, income, expense, net: income - expense };
+  });
 }
 
 export default function DashboardScreen() {
   const navigation = useNavigation<Nav>();
-  const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [refreshing, setRefreshing] = useState(false);
 
   const load = useCallback(async () => {
-    const data = await loadExpenses();
-    setExpenses(data);
+    setTransactions(await loadExpenses());
   }, []);
 
-  useFocusEffect(
-    useCallback(() => {
-      load();
-    }, [load]),
-  );
+  useFocusEffect(useCallback(() => { load(); }, [load]));
 
-  const onRefresh = async () => {
-    setRefreshing(true);
-    await load();
-    setRefreshing(false);
-  };
+  const onRefresh = async () => { setRefreshing(true); await load(); setRefreshing(false); };
 
   const now = new Date();
-  const thisMonthExpenses = expenses.filter((e) => {
-    const d = new Date(e.date);
+  const thisMonth = transactions.filter((t) => {
+    const d = new Date(t.date);
     return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
   });
-  const monthlyTotal = thisMonthExpenses.reduce((s, e) => s + e.amount, 0);
-  const allTotal = expenses.reduce((s, e) => s + e.amount, 0);
-  const recent = [...expenses]
+
+  const monthlyIncome  = thisMonth.filter((t) => t.type === 'income').reduce((s, t) => s + t.amount, 0);
+  const monthlyExpense = thisMonth.filter((t) => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+  const monthlyNet     = monthlyIncome - monthlyExpense;
+
+  const totalIncome  = transactions.filter((t) => t.type === 'income').reduce((s, t) => s + t.amount, 0);
+  const totalExpense = transactions.filter((t) => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+  const netBalance   = totalIncome - totalExpense;
+
+  const recent = [...transactions]
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     .slice(0, 5);
 
-  // Top category this month
-  const catMap: Record<string, number> = {};
-  thisMonthExpenses.forEach((e) => {
-    catMap[e.category] = (catMap[e.category] ?? 0) + e.amount;
-  });
-  const topCat = Object.entries(catMap).sort((a, b) => b[1] - a[1])[0];
-  const topCatMeta = topCat ? getCategoryMeta(topCat[0]) : null;
+  const monthlyData = getMonthlyData(transactions);
 
-  const monthlyData = getMonthlyData(expenses);
+  // Bar chart: monthly net balance
   const chartData = {
     labels: monthlyData.map((m) => m.label),
-    datasets: [{ data: monthlyData.map((m) => Math.max(m.total, 0)) }],
+    datasets: [{ data: monthlyData.map((m) => Math.max(m.expense, 0)) }],
   };
+
+  const netColor = monthlyNet >= 0 ? '#00C9A7' : '#FF6B6B';
+  const netBalanceColor = netBalance >= 0 ? '#00C9A7' : '#FF6B6B';
 
   return (
     <SafeAreaView className="flex-1 bg-surface">
@@ -102,46 +95,65 @@ export default function DashboardScreen() {
           </View>
           <TouchableOpacity
             className="bg-primary rounded-xl px-4 py-2"
-            onPress={() => navigation.navigate('AddExpense')}
+            onPress={() => navigation.navigate('AddTransaction')}
           >
             <Text className="text-white font-bold text-sm">+ Add</Text>
           </TouchableOpacity>
         </View>
 
-        {/* Stat cards */}
-        <View className="flex-row gap-3 px-5 mt-3">
-          <StatCard
-            label="This Month"
-            value={`$${monthlyTotal.toFixed(0)}`}
-            icon="📅"
-            hexColor="#6C63FF"
-          />
-          <StatCard
-            label="All Time"
-            value={`$${allTotal.toFixed(0)}`}
-            icon="💳"
-            hexColor="#FF6584"
-          />
+        {/* Net balance hero card */}
+        <View className="mx-5 mt-3 bg-white rounded-2xl p-5 border border-gray-100 shadow-sm items-center">
+          <Text className="text-sm text-gray-500 mb-1">Net Balance (All Time)</Text>
+          <Text className="text-4xl font-extrabold" style={{ color: netBalanceColor }}>
+            {netBalance >= 0 ? '+' : '-'}${Math.abs(netBalance).toFixed(2)}
+          </Text>
+          <View className="flex-row gap-6 mt-3">
+            <View className="items-center">
+              <Text className="text-xs text-gray-400 mb-0.5">Total Income</Text>
+              <Text className="text-base font-bold text-success">+${totalIncome.toFixed(0)}</Text>
+            </View>
+            <View className="w-px bg-gray-100" />
+            <View className="items-center">
+              <Text className="text-xs text-gray-400 mb-0.5">Total Expenses</Text>
+              <Text className="text-base font-bold text-danger">-${totalExpense.toFixed(0)}</Text>
+            </View>
+          </View>
         </View>
+
+        {/* This month stat cards */}
         <View className="flex-row gap-3 px-5 mt-3">
           <StatCard
-            label="Transactions"
-            value={String(expenses.length)}
-            icon="🧾"
+            label="Income (Month)"
+            value={`$${monthlyIncome.toFixed(0)}`}
+            icon="💚"
             hexColor="#00C9A7"
           />
           <StatCard
-            label="Top Category"
-            value={topCatMeta ? topCatMeta.icon : '—'}
-            icon="🏆"
-            hexColor={topCatMeta?.color ?? '#9CA3AF'}
-            sub={topCat ? topCat[0] : 'No data'}
+            label="Expenses (Month)"
+            value={`$${monthlyExpense.toFixed(0)}`}
+            icon="🔴"
+            hexColor="#FF6B6B"
+          />
+        </View>
+        <View className="flex-row gap-3 px-5 mt-3">
+          <StatCard
+            label="Net (Month)"
+            value={`${monthlyNet >= 0 ? '+' : '-'}$${Math.abs(monthlyNet).toFixed(0)}`}
+            icon={monthlyNet >= 0 ? '🎯' : '⚠️'}
+            hexColor={netColor}
+          />
+          <StatCard
+            label="Transactions"
+            value={String(transactions.length)}
+            icon="🧾"
+            hexColor="#6C63FF"
           />
         </View>
 
-        {/* Bar chart */}
+        {/* Monthly spending bar chart */}
         <View className="mx-5 mt-5 bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
-          <Text className="text-base font-bold text-gray-900 mb-3">6-Month Spending</Text>
+          <Text className="text-base font-bold text-gray-900 mb-1">6-Month Spending</Text>
+          <Text className="text-xs text-gray-400 mb-3">Expense total per month</Text>
           <BarChart
             data={chartData}
             width={SCREEN_WIDTH - 72}
@@ -153,7 +165,7 @@ export default function DashboardScreen() {
               backgroundGradientFrom: '#fff',
               backgroundGradientTo: '#fff',
               decimalPlaces: 0,
-              color: (opacity = 1) => `rgba(108, 99, 255, ${opacity})`,
+              color: (opacity = 1) => `rgba(255, 107, 107, ${opacity})`,
               labelColor: () => '#6B7280',
               barPercentage: 0.6,
               propsForBackgroundLines: { strokeDasharray: '', stroke: '#F3F4F6' },
@@ -164,32 +176,41 @@ export default function DashboardScreen() {
           />
         </View>
 
-        {/* Recent expenses */}
+        {/* Recent transactions */}
         <View className="px-5 mt-5">
           <View className="flex-row justify-between items-center mb-3">
-            <Text className="text-base font-bold text-gray-900">Recent Expenses</Text>
-            <TouchableOpacity onPress={() => navigation.navigate('MainTabs', { screen: 'Expenses' } as any)}>
+            <Text className="text-base font-bold text-gray-900">Recent Transactions</Text>
+            <TouchableOpacity
+              onPress={() =>
+                navigation.navigate('MainTabs', { screen: 'Transactions' } as any)
+              }
+            >
               <Text className="text-sm text-primary font-semibold">See all →</Text>
             </TouchableOpacity>
           </View>
 
           {recent.length === 0 ? (
             <View className="bg-white rounded-2xl p-8 items-center border border-gray-100">
-              <Text className="text-4xl mb-3">💸</Text>
+              <Text className="text-4xl mb-3">💰</Text>
               <Text className="text-gray-500 text-sm text-center">
-                No expenses yet.{'\n'}Tap "+ Add" to get started!
+                No transactions yet.{'\n'}Tap "+ Add" to get started!
               </Text>
             </View>
           ) : (
-            recent.map((expense) => {
-              const meta = getCategoryMeta(expense.category);
-              const date = new Date(expense.date + 'T00:00:00').toLocaleDateString('en-US', {
+            recent.map((t) => {
+              const meta = getCategoryMeta(t.category);
+              const isIncome = t.type === 'income';
+              const date = new Date(t.date + 'T00:00:00').toLocaleDateString('en-US', {
                 month: 'short', day: 'numeric',
               });
               return (
                 <View
-                  key={expense.id}
-                  className="flex-row items-center bg-white rounded-2xl px-4 py-3 mb-2 border border-gray-100 shadow-sm"
+                  key={t.id}
+                  className="flex-row items-center bg-white rounded-2xl px-4 py-3 mb-2 shadow-sm"
+                  style={{
+                    borderWidth: 1,
+                    borderColor: isIncome ? '#D1FAF4' : '#F3F4F6',
+                  }}
                 >
                   <View
                     className="w-10 h-10 rounded-full items-center justify-center mr-3"
@@ -199,12 +220,15 @@ export default function DashboardScreen() {
                   </View>
                   <View className="flex-1">
                     <Text className="text-sm font-semibold text-gray-900" numberOfLines={1}>
-                      {expense.title}
+                      {t.title}
                     </Text>
-                    <Text className="text-xs text-gray-400">{date}</Text>
+                    <Text className="text-xs text-gray-400">{t.category} · {date}</Text>
                   </View>
-                  <Text className="text-sm font-bold text-gray-800">
-                    ${expense.amount.toFixed(2)}
+                  <Text
+                    className="text-sm font-bold"
+                    style={{ color: isIncome ? '#00C9A7' : '#374151' }}
+                  >
+                    {isIncome ? '+' : '-'}${t.amount.toFixed(2)}
                   </Text>
                 </View>
               );

@@ -7,17 +7,20 @@ import {
   FlatList,
   SafeAreaView,
 } from 'react-native';
-import { CATEGORIES, CategoryMeta } from '../constants/categories';
+import { getCategoriesForType } from '../constants/categories';
+import { CategoryMeta, TransactionType } from '../types';
 
 interface Props {
   value: string;
   onChange: (category: string) => void;
+  transactionType: TransactionType;
   error?: string;
 }
 
-export default function CategoryPicker({ value, onChange, error }: Props) {
+export default function CategoryPicker({ value, onChange, transactionType, error }: Props) {
   const [open, setOpen] = useState(false);
-  const selected = CATEGORIES.find((c) => c.label === value);
+  const categories: CategoryMeta[] = getCategoriesForType(transactionType);
+  const selected = categories.find((c) => c.label === value);
 
   return (
     <>
@@ -28,7 +31,7 @@ export default function CategoryPicker({ value, onChange, error }: Props) {
         }`}
         accessibilityLabel="Select category"
       >
-        <Text className="text-xl mr-3">{selected?.icon ?? '📦'}</Text>
+        <Text className="text-xl mr-3">{selected?.icon ?? (transactionType === 'income' ? '💰' : '📦')}</Text>
         <Text className={`flex-1 text-base ${value ? 'text-gray-900' : 'text-gray-400'}`}>
           {value || 'Select category…'}
         </Text>
@@ -40,13 +43,15 @@ export default function CategoryPicker({ value, onChange, error }: Props) {
         <View className="flex-1 justify-end bg-black/40">
           <SafeAreaView className="bg-white rounded-t-3xl">
             <View className="px-5 pt-5 pb-3 border-b border-gray-100 flex-row justify-between items-center">
-              <Text className="text-lg font-bold text-gray-900">Choose Category</Text>
+              <Text className="text-lg font-bold text-gray-900">
+                {transactionType === 'income' ? '💰 Income Category' : '📦 Expense Category'}
+              </Text>
               <TouchableOpacity onPress={() => setOpen(false)}>
                 <Text className="text-gray-400 text-xl">✕</Text>
               </TouchableOpacity>
             </View>
             <FlatList
-              data={CATEGORIES}
+              data={categories}
               keyExtractor={(item) => item.label}
               numColumns={2}
               contentContainerClassName="p-4"

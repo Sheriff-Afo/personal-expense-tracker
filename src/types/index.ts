@@ -1,5 +1,8 @@
-export interface Expense {
+export type TransactionType = 'expense' | 'income';
+
+export interface Transaction {
   id: string;
+  type: TransactionType;
   title: string;
   amount: number;
   category: string;
@@ -9,6 +12,9 @@ export interface Expense {
   updatedAt?: string;
 }
 
+/** @deprecated Use Transaction instead */
+export type Expense = Transaction;
+
 export interface CategoryMeta {
   label: string;
   icon: string;
@@ -17,12 +23,12 @@ export interface CategoryMeta {
 
 export type RootStackParamList = {
   MainTabs: undefined;
-  AddExpense: undefined;
-  EditExpense: { expense: Expense };
+  AddTransaction: undefined;
+  EditTransaction: { transaction: Transaction };
 };
 
 export type TabParamList = {
   Dashboard: undefined;
-  Expenses: undefined;
+  Transactions: undefined;
   Analytics: undefined;
 };
