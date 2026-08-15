@@ -1,17 +1,22 @@
 /**
- * Removes the incomplete "exports" field from all metro-* packages.
+ * Patches metro-* packages to expose all internal .js files via the exports map.
  *
- * Node 20.17+ strictly enforces package.json "exports" maps. Metro and its
- * sub-packages ship with exports fields that omit many internal paths that
- * @expo/cli and @expo/metro-config rely on, causing ERR_PACKAGE_PATH_NOT_EXPORTED.
+ * Problem: Node 20.17+ strictly enforces package.json "exports" fields.
+ * Metro and its sub-packages ship with INCOMPLETE exports maps — some internal
+ * paths that @expo/cli / @expo/metro-config rely on are missing, causing
+ * ERR_PACKAGE_PATH_NOT_EXPORTED.
  *
- * Removing the exports field causes Node to fall back to classic file-based
- * resolution (the "main" field / index.js), which works correctly for all
- * CommonJS Metro packages and has no runtime side-effects.
+ * Fix: For every metro-* package that has an "exports" field, we ADD the
+ * missing entries by scanning the package's .js files on disk. We never
+ * REMOVE existing entries (some, like "private/" remappings in metro-core,
+ * are intentional and must stay).
  *
  * Runs automatically via the "postinstall" npm hook.
  */
-const fs = require('fs');
+
+'use strict';
+
+const fs   = require('fs');
 const path = require('path');
 
 const NODE_MODULES = path.join(__dirname, '..', 'node_modules');
@@ -21,30 +26,84 @@ if (!fs.existsSync(NODE_MODULES)) {
   process.exit(0);
 }
 
-const metroPkgs = fs.readdirSync(NODE_MODULES).filter((d) => /^metro/.test(d));
+// Directories to skip when scanning for .js files
+const SKIP_DIRS = new Set(['__tests__', '__mocks__', '__flowtests__', 'node_modules']);
 
-let patched = 0;
-for (const pkg of metroPkgs) {
-  const pkgJsonPath = path.join(NODE_MODULES, pkg, 'package.json');
-  if (!fs.existsSync(pkgJsonPath)) continue;
+/** Recursively collect relative paths for all .js files under a directory */
+function collectJsFiles(dir, rootDir) {
+  const results = [];
+  let entries;
+  try { entries = fs.readdirSync(dir, { withFileTypes: true }); } catch { return results; }
 
-  let pkgJson;
-  try {
-    pkgJson = JSON.parse(fs.readFileSync(pkgJsonPath, 'utf8'));
-  } catch {
-    continue;
+  for (const entry of entries) {
+    if (SKIP_DIRS.has(entry.name)) continue;
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      results.push(...collectJsFiles(full, rootDir));
+    } else if (entry.isFile() && entry.name.endsWith('.js')) {
+      // Use forward slashes; prefix with './'
+      results.push('./' + path.relative(rootDir, full).replace(/\\/g, '/'));
+    }
   }
-
-  if (!pkgJson.exports) continue; // nothing to remove
-
-  delete pkgJson.exports;
-  fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 2) + '\n');
-  console.log(`[patch-metro] Removed incomplete exports from: ${pkg}`);
-  patched++;
+  return results;
 }
 
-if (patched > 0) {
-  console.log(`[patch-metro] Patched ${patched} metro package(s) ✓`);
+/** Return the set of all path strings already reachable via the exports map */
+function reachablePaths(exportsMap) {
+  const reachable = new Set();
+  for (const key of Object.keys(exportsMap)) {
+    reachable.add(key);
+    // Track both with and without .js so we don't double-add
+    if (key.endsWith('.js')) reachable.add(key.slice(0, -3));
+    else                     reachable.add(key + '.js');
+  }
+  return reachable;
+}
+
+// ── main ────────────────────────────────────────────────────────────────────
+
+const metroPkgNames = fs.readdirSync(NODE_MODULES).filter(d => /^metro/.test(d));
+
+let totalPatched = 0;
+
+for (const pkgName of metroPkgNames) {
+  const pkgDir     = path.join(NODE_MODULES, pkgName);
+  const pkgJsonPath = path.join(pkgDir, 'package.json');
+  if (!fs.existsSync(pkgJsonPath)) continue;
+
+  let pkg;
+  try { pkg = JSON.parse(fs.readFileSync(pkgJsonPath, 'utf8')); }
+  catch { continue; }
+
+  // Only patch packages that already have an exports field.
+  // Packages without exports use classic resolution — no patch needed.
+  if (!pkg.exports || typeof pkg.exports !== 'object') continue;
+
+  const reachable = reachablePaths(pkg.exports);
+  const jsFiles   = collectJsFiles(pkgDir, pkgDir);
+
+  let changed = false;
+  for (const file of jsFiles) {
+    const keyNoExt = file.endsWith('.js') ? file.slice(0, -3) : file;
+    // Skip if the file (with or without extension) is already exported
+    if (reachable.has(file) || reachable.has(keyNoExt)) continue;
+
+    // Add the path-without-extension as the export key (Node convention)
+    pkg.exports[keyNoExt] = file;
+    reachable.add(keyNoExt);
+    reachable.add(file);
+    changed = true;
+  }
+
+  if (changed) {
+    fs.writeFileSync(pkgJsonPath, JSON.stringify(pkg, null, 2) + '\n');
+    console.log(`[patch-metro] Patched: ${pkgName}`);
+    totalPatched++;
+  }
+}
+
+if (totalPatched > 0) {
+  console.log(`[patch-metro] Done — patched ${totalPatched} metro package(s) ✓`);
 } else {
-  console.log('[patch-metro] No patches needed — all metro packages already clean.');
+  console.log('[patch-metro] All metro exports already complete — no patch needed.');
 }
