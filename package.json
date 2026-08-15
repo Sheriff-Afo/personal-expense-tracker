@@ -35,23 +35,24 @@
     "@babel/core": "^7.25.0",
     "@types/react": "~19.1.0",
     "@types/uuid": "^10.0.0",
+    "babel-preset-expo": "~54.0.1",
     "typescript": "^5.3.3"
   },
   "private": true,
   "overrides": {
-    "metro": "~0.83.0",
-    "metro-babel-transformer": "~0.83.0",
-    "metro-cache": "~0.83.0",
-    "metro-cache-key": "~0.83.0",
-    "metro-config": "~0.83.0",
-    "metro-core": "~0.83.0",
-    "metro-file-map": "~0.83.0",
-    "metro-minify-terser": "~0.83.0",
-    "metro-resolver": "~0.83.0",
-    "metro-runtime": "~0.83.0",
-    "metro-source-map": "~0.83.0",
-    "metro-symbolicate": "~0.83.0",
-    "metro-transform-plugins": "~0.83.0",
-    "metro-transform-worker": "~0.83.0"
+    "metro": "0.83.1",
+    "metro-babel-transformer": "0.83.1",
+    "metro-cache": "0.83.1",
+    "metro-cache-key": "0.83.1",
+    "metro-config": "0.83.1",
+    "metro-core": "0.83.1",
+    "metro-file-map": "0.83.1",
+    "metro-minify-terser": "0.83.1",
+    "metro-resolver": "0.83.1",
+    "metro-runtime": "0.83.1",
+    "metro-source-map": "0.83.1",
+    "metro-symbolicate": "0.83.1",
+    "metro-transform-plugins": "0.83.1",
+    "metro-transform-worker": "0.83.1"
   }
 }
