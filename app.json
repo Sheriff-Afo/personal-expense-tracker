@@ -4,10 +4,8 @@
     "slug": "personal-expense-tracker",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "splash": {
-      "image": "./assets/splash.png",
       "resizeMode": "contain",
       "backgroundColor": "#6C63FF"
     },
@@ -17,15 +15,12 @@
       "bundleIdentifier": "com.sheriffafo.expensetracker"
     },
     "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#6C63FF"
-      },
       "package": "com.sheriffafo.expensetracker",
-      "versionCode": 1
+      "versionCode": 1,
+      "adaptiveIcon": {
+        "backgroundColor": "#6C63FF"
+      }
     },
-    "web": {
-      "favicon": "./assets/favicon.png"
-    }
+    "web": {}
   }
 }
