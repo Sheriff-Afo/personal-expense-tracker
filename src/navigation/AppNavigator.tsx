@@ -6,10 +6,15 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { RootStackParamList, TabParamList } from '../types';
 import DashboardScreen from '../screens/DashboardScreen';
 import TransactionsScreen from '../screens/TransactionsScreen';
+import TransactionsTopTabsScreen from '../screens/TransactionsTopTabsScreen';
 import AnalyticsScreen from '../screens/AnalyticsScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import AddTransactionScreen from '../screens/AddTransactionScreen';
 import EditTransactionScreen from '../screens/EditTransactionScreen';
+// ─── Navigation feature flag ──────────────────────────────────────────────────
+// Flip USE_MATERIAL_TOP_TABS_FOR_TRANSACTIONS in src/config/featureFlags.ts
+// to switch between the two Transactions implementations. Nothing else to change.
+import { FLAGS } from '../config/featureFlags';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<TabParamList>();
@@ -47,7 +52,12 @@ function MainTabs() {
       />
       <Tab.Screen
         name="Transactions"
-        component={TransactionsScreen}
+        // ← Toggle in src/config/featureFlags.ts
+        component={
+          FLAGS.USE_MATERIAL_TOP_TABS_FOR_TRANSACTIONS
+            ? TransactionsTopTabsScreen
+            : TransactionsScreen
+        }
         options={{
           tabBarIcon: ({ focused }) => <TabIcon icon="💳" focused={focused} />,
         }}
