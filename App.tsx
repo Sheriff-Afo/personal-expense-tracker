@@ -1,3 +1,6 @@
+// react-native-gesture-handler MUST be the very first import.
+// Required by @react-navigation/drawer (and any RNGH-based gesture).
+import 'react-native-gesture-handler';
 import './global.css';
 import React, { useEffect, useState } from 'react';
 import { View, Text, ActivityIndicator } from 'react-native';
