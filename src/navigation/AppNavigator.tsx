@@ -1,5 +1,6 @@
 import React from 'react';
 import { Text } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -26,6 +27,14 @@ function TabIcon({ icon, focused }: { icon: string; focused: boolean }) {
 }
 
 function MainTabs() {
+  // Read the device's bottom inset (Android nav bar / iPhone home indicator).
+  // Adding it to height and paddingBottom lifts the tab bar clear of the
+  // system navigation so users don't accidentally tap the wrong thing.
+  const { bottom: bottomInset } = useSafeAreaInsets();
+  const TAB_CONTENT_HEIGHT = 56;          // icon + label zone
+  const TAB_PADDING_TOP    = 6;
+  const TAB_PADDING_BOTTOM = 8;
+
   return (
     <Tab.Navigator
       screenOptions={{
@@ -34,9 +43,11 @@ function MainTabs() {
           backgroundColor: '#FFFFFF',
           borderTopColor: '#E5E7EB',
           borderTopWidth: 1,
-          height: 62,
-          paddingBottom: 8,
-          paddingTop: 6,
+          // Total height = content zone + top padding + system inset
+          height: TAB_CONTENT_HEIGHT + TAB_PADDING_TOP + bottomInset,
+          paddingTop: TAB_PADDING_TOP,
+          // Push the icons up above the system nav bar
+          paddingBottom: bottomInset > 0 ? bottomInset : TAB_PADDING_BOTTOM,
         },
         tabBarActiveTintColor: '#6C63FF',
         tabBarInactiveTintColor: '#9CA3AF',
