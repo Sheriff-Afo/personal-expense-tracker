@@ -159,7 +159,7 @@ export default function TransactionsScreen() {
           <Text className="text-xs text-gray-400">{filtered.length} transaction{filtered.length !== 1 ? 's' : ''}</Text>
           <Text
             className="text-sm font-bold"
-            style={{ color: net >= 0 ? '#00C9A7' : '#FF6B6B' }}
+            style={{ color: net >= 0 ? '#2D7D46' : '#B33A2B' }}
           >
             Net: {net >= 0 ? '+' : '-'}{fmt(Math.abs(net))}
           </Text>

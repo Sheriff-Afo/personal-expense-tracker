@@ -114,7 +114,7 @@ function TransactionList({ type }: { type: 'all' | TransactionType }) {
               </Text>
               <Text
                 className="text-sm font-bold"
-                style={{ color: net >= 0 ? '#00C9A7' : '#FF6B6B' }}
+                style={{ color: net >= 0 ? '#2D7D46' : '#B33A2B' }}
               >
                 Net: {net >= 0 ? '+' : '-'}{fmt(Math.abs(net))}
               </Text>
@@ -226,11 +226,11 @@ export default function TransactionsTopTabsScreen() {
         <TopTabs.Navigator
           screenOptions={{
             // Active tab text + indicator colour — matches app's primary purple
-            tabBarActiveTintColor: '#6C63FF',
+            tabBarActiveTintColor: '#F08A00',
             tabBarInactiveTintColor: '#9CA3AF',
             // The sliding underline indicator
             tabBarIndicatorStyle: {
-              backgroundColor: '#6C63FF',
+              backgroundColor: '#F08A00',
               height: 3,
               borderRadius: 2,
             },

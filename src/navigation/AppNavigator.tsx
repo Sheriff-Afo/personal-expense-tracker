@@ -143,10 +143,10 @@ function AppDrawer({ visible, onClose }: DrawerProps) {
             transform: [{ translateX: slideAnim }],
           }}
         >
-          {/* Purple branding strip */}
+          {/* Brand strip */}
           <View
             style={{
-              backgroundColor: '#6C63FF',
+              backgroundColor: '#5C4422',
               paddingHorizontal: 20,
               paddingTop: topInset + 24,
               paddingBottom: 28,
@@ -204,7 +204,7 @@ function MenuBar({ onOpen }: { onOpen: () => void }) {
   return (
     <View
       style={{
-        backgroundColor: '#F8F9FB',
+        backgroundColor: '#FAF8F4',
         paddingTop: top + 4,
         paddingBottom: 10,
         paddingHorizontal: 16,
@@ -215,7 +215,7 @@ function MenuBar({ onOpen }: { onOpen: () => void }) {
       }}
     >
       <TouchableOpacity onPress={onOpen} style={{ padding: 6, marginRight: 10 }} accessibilityLabel="Open menu">
-        <Text style={{ fontSize: 22, color: '#6C63FF' }}>☰</Text>
+        <Text style={{ fontSize: 22, color: '#F08A00' }}>☰</Text>
       </TouchableOpacity>
       <Text style={{ fontSize: 17, fontWeight: '800', color: '#111827', letterSpacing: -0.3 }}>
         ExpenseTracker
@@ -262,7 +262,7 @@ function MainTabs() {
                 paddingTop: TAB_PADDING_TOP,
                 paddingBottom: bottomInset > 0 ? bottomInset : TAB_PADDING_BOTTOM,
               },
-          tabBarActiveTintColor:   '#6C63FF',
+          tabBarActiveTintColor:   '#F08A00',
           tabBarInactiveTintColor: '#9CA3AF',
           tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },
         }}

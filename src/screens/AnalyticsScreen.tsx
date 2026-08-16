@@ -183,8 +183,8 @@ export default function AnalyticsScreen() {
   const dualLineData = {
     labels: monthly6.map((m) => m.label),
     datasets: [
-      { data: monthly6.map((m) => Math.max(m.income, 0)),  color: (o = 1) => `rgba(0,201,167,${o})`,  strokeWidth: 2 },
-      { data: monthly6.map((m) => Math.max(m.expense, 0)), color: (o = 1) => `rgba(255,107,107,${o})`, strokeWidth: 2 },
+      { data: monthly6.map((m) => Math.max(m.income, 0)),  color: (o = 1) => `rgba(45,125,70,${o})`,  strokeWidth: 2 },
+      { data: monthly6.map((m) => Math.max(m.expense, 0)), color: (o = 1) => `rgba(179,58,43,${o})`, strokeWidth: 2 },
     ],
     legend: ['Income', 'Expenses'],
   };
@@ -252,12 +252,12 @@ export default function AnalyticsScreen() {
     datasets: [
       {
         data: annualMonths.map((m) => Math.max(m.income, 0)),
-        color: (o = 1) => `rgba(0,201,167,${o})`,
+        color: (o = 1) => `rgba(45,125,70,${o})`,
         strokeWidth: 2,
       },
       {
         data: annualMonths.map((m) => Math.max(m.expense, 0)),
-        color: (o = 1) => `rgba(255,107,107,${o})`,
+        color: (o = 1) => `rgba(179,58,43,${o})`,
         strokeWidth: 2,
       },
     ],
@@ -294,7 +294,7 @@ export default function AnalyticsScreen() {
             >
               <Text
                 className="text-sm font-bold"
-                style={{ color: mode === m ? '#6C63FF' : '#9CA3AF' }}
+                style={{ color: mode === m ? '#F08A00' : '#9CA3AF' }}
               >
                 {m === 'overview' ? '📊 Overview' : '📅 Annual'}
               </Text>
@@ -309,19 +309,19 @@ export default function AnalyticsScreen() {
           <>
             {/* Top summary row */}
             <View className="flex-row gap-3 px-5 mb-3">
-              <SummaryCard label="Total Income"  value={`+${fmt(totalIncome,  0)}`} valueColor="#00C9A7" />
-              <SummaryCard label="Total Spent"   value={`-${fmt(totalExpense, 0)}`} valueColor="#FF6B6B" />
+              <SummaryCard label="Total Income"  value={`+${fmt(totalIncome,  0)}`} valueColor="#2D7D46" />
+              <SummaryCard label="Total Spent"   value={`-${fmt(totalExpense, 0)}`} valueColor="#B33A2B" />
             </View>
             <View className="flex-row gap-3 px-5 mb-5">
               <SummaryCard
                 label="Net Balance"
                 value={`${netBalance >= 0 ? '+' : '-'}${fmt(Math.abs(netBalance), 0)}`}
-                valueColor={netBalance >= 0 ? '#00C9A7' : '#FF6B6B'}
+                valueColor={netBalance >= 0 ? '#2D7D46' : '#B33A2B'}
               />
               <SummaryCard
                 label="Savings Rate"
                 value={`${savingsRate.toFixed(1)}%`}
-                valueColor={savingsRate >= 0 ? '#00C9A7' : '#FF6B6B'}
+                valueColor={savingsRate >= 0 ? '#2D7D46' : '#B33A2B'}
               />
             </View>
 
@@ -342,7 +342,7 @@ export default function AnalyticsScreen() {
                       backgroundGradientFrom: '#fff',
                       backgroundGradientTo: '#fff',
                       decimalPlaces: 0,
-                      color: (o = 1) => `rgba(108,99,255,${o})`,
+                      color: (o = 1) => `rgba(107,114,128,${o})`,
                       labelColor: () => '#6B7280',
                       propsForDots: { r: '4', strokeWidth: '2' },
                       propsForBackgroundLines: { strokeDasharray: '', stroke: '#F3F4F6' },
@@ -353,11 +353,11 @@ export default function AnalyticsScreen() {
                   />
                   <View className="flex-row justify-center gap-6 mt-2">
                     <View className="flex-row items-center gap-1.5">
-                      <View className="w-3 h-3 rounded-full" style={{ backgroundColor: '#00C9A7' }} />
+                      <View className="w-3 h-3 rounded-full" style={{ backgroundColor: '#2D7D46' }} />
                       <Text className="text-xs text-gray-600">Income</Text>
                     </View>
                     <View className="flex-row items-center gap-1.5">
-                      <View className="w-3 h-3 rounded-full" style={{ backgroundColor: '#FF6B6B' }} />
+                      <View className="w-3 h-3 rounded-full" style={{ backgroundColor: '#B33A2B' }} />
                       <Text className="text-xs text-gray-600">Expenses</Text>
                     </View>
                   </View>
@@ -441,7 +441,7 @@ export default function AnalyticsScreen() {
 
             {/* Quick stats */}
             <View className="flex-row gap-3 px-5 mb-5">
-              <SummaryCard label="Avg / Expense"    value={fmt(avgExpense, 0)}         valueColor="#6C63FF" />
+              <SummaryCard label="Avg / Expense"    value={fmt(avgExpense, 0)}         valueColor="#F08A00" />
               <SummaryCard label="All Transactions" value={String(transactions.length)} valueColor="#F59E0B" />
             </View>
 
@@ -497,7 +497,7 @@ export default function AnalyticsScreen() {
                   justifyContent: 'center',
                 }}
               >
-                <Text style={{ fontSize: 20, color: '#6C63FF', fontWeight: '700' }}>←</Text>
+                <Text style={{ fontSize: 20, color: '#F08A00', fontWeight: '700' }}>←</Text>
               </TouchableOpacity>
 
               <View className="items-center">
@@ -521,7 +521,7 @@ export default function AnalyticsScreen() {
                   justifyContent: 'center',
                 }}
               >
-                <Text style={{ fontSize: 20, color: '#6C63FF', fontWeight: '700' }}>→</Text>
+                <Text style={{ fontSize: 20, color: '#F08A00', fontWeight: '700' }}>→</Text>
               </TouchableOpacity>
             </View>
 
@@ -541,24 +541,24 @@ export default function AnalyticsScreen() {
                   <SummaryCard
                     label="Annual Income"
                     value={`+${fmt(annualIncome, 0)}`}
-                    valueColor="#00C9A7"
+                    valueColor="#2D7D46"
                   />
                   <SummaryCard
                     label="Annual Expenses"
                     value={`-${fmt(annualExpense, 0)}`}
-                    valueColor="#FF6B6B"
+                    valueColor="#B33A2B"
                   />
                 </View>
                 <View className="flex-row gap-3 px-5 mb-5">
                   <SummaryCard
                     label="Net Balance"
                     value={`${annualNet >= 0 ? '+' : '-'}${fmt(Math.abs(annualNet), 0)}`}
-                    valueColor={annualNet >= 0 ? '#00C9A7' : '#FF6B6B'}
+                    valueColor={annualNet >= 0 ? '#2D7D46' : '#B33A2B'}
                   />
                   <SummaryCard
                     label="Savings Rate"
                     value={`${annualSavingsRate.toFixed(1)}%`}
-                    valueColor={annualSavingsRate >= 0 ? '#00C9A7' : '#FF6B6B'}
+                    valueColor={annualSavingsRate >= 0 ? '#2D7D46' : '#B33A2B'}
                   />
                 </View>
 
@@ -580,7 +580,7 @@ export default function AnalyticsScreen() {
                         backgroundGradientFrom: '#fff',
                         backgroundGradientTo: '#fff',
                         decimalPlaces: 0,
-                        color: (o = 1) => `rgba(108,99,255,${o})`,
+                        color: (o = 1) => `rgba(107,114,128,${o})`,
                         labelColor: () => '#6B7280',
                         propsForDots: { r: '3', strokeWidth: '2' },
                         propsForBackgroundLines: { strokeDasharray: '', stroke: '#F3F4F6' },
@@ -592,11 +592,11 @@ export default function AnalyticsScreen() {
                   </ScrollView>
                   <View className="flex-row justify-center gap-6 mt-2">
                     <View className="flex-row items-center gap-1.5">
-                      <View className="w-3 h-3 rounded-full" style={{ backgroundColor: '#00C9A7' }} />
+                      <View className="w-3 h-3 rounded-full" style={{ backgroundColor: '#2D7D46' }} />
                       <Text className="text-xs text-gray-600">Income</Text>
                     </View>
                     <View className="flex-row items-center gap-1.5">
-                      <View className="w-3 h-3 rounded-full" style={{ backgroundColor: '#FF6B6B' }} />
+                      <View className="w-3 h-3 rounded-full" style={{ backgroundColor: '#B33A2B' }} />
                       <Text className="text-xs text-gray-600">Expenses</Text>
                     </View>
                   </View>
@@ -604,12 +604,12 @@ export default function AnalyticsScreen() {
 
                 {/* ── Quick stats row ── */}
                 <View className="flex-row gap-3 px-5 mb-3">
-                  <SummaryCard label="Avg Income / Mo"  value={fmt(avgMonthlyIncome,  0)} valueColor="#00C9A7" />
-                  <SummaryCard label="Avg Expense / Mo" value={fmt(avgMonthlyExpense, 0)} valueColor="#FF6B6B" />
+                  <SummaryCard label="Avg Income / Mo"  value={fmt(avgMonthlyIncome,  0)} valueColor="#2D7D46" />
+                  <SummaryCard label="Avg Expense / Mo" value={fmt(avgMonthlyExpense, 0)} valueColor="#B33A2B" />
                 </View>
                 <View className="flex-row gap-3 px-5 mb-5">
-                  <SummaryCard label="Surplus Months" value={String(surplusMonths)} valueColor="#00C9A7" />
-                  <SummaryCard label="Deficit Months" value={String(deficitMonths)} valueColor="#FF6B6B" />
+                  <SummaryCard label="Surplus Months" value={String(surplusMonths)} valueColor="#2D7D46" />
+                  <SummaryCard label="Deficit Months" value={String(deficitMonths)} valueColor="#B33A2B" />
                 </View>
 
                 {/* ── Year Highlights ── */}
@@ -630,7 +630,7 @@ export default function AnalyticsScreen() {
                       </View>
                       <Text
                         className="text-sm font-bold"
-                        style={{ color: bestSavingsMonth.net >= 0 ? '#00C9A7' : '#FF6B6B' }}
+                        style={{ color: bestSavingsMonth.net >= 0 ? '#2D7D46' : '#B33A2B' }}
                       >
                         {bestSavingsMonth.net >= 0 ? '+' : ''}{fmt(bestSavingsMonth.net, 0)}
                       </Text>
@@ -696,19 +696,19 @@ export default function AnalyticsScreen() {
                           </Text>
                           <Text
                             className="flex-1 text-xs text-right"
-                            style={{ color: isActive && m.income > 0 ? '#00C9A7' : '#D1D5DB' }}
+                            style={{ color: isActive && m.income > 0 ? '#2D7D46' : '#D1D5DB' }}
                           >
                             {isActive && m.income > 0 ? `+${fmt(m.income, 0)}` : '—'}
                           </Text>
                           <Text
                             className="w-20 text-xs text-right"
-                            style={{ color: isActive && m.expense > 0 ? '#FF6B6B' : '#D1D5DB' }}
+                            style={{ color: isActive && m.expense > 0 ? '#B33A2B' : '#D1D5DB' }}
                           >
                             {isActive && m.expense > 0 ? `-${fmt(m.expense, 0)}` : '—'}
                           </Text>
                           <Text
                             className="w-20 text-xs font-bold text-right"
-                            style={{ color: isActive ? (m.net >= 0 ? '#00C9A7' : '#FF6B6B') : '#D1D5DB' }}
+                            style={{ color: isActive ? (m.net >= 0 ? '#2D7D46' : '#B33A2B') : '#D1D5DB' }}
                           >
                             {isActive ? `${m.net >= 0 ? '+' : ''}${fmt(m.net, 0)}` : '—'}
                           </Text>
@@ -720,7 +720,7 @@ export default function AnalyticsScreen() {
                               style={{
                                 height: '100%',
                                 width: `${Math.round((Math.abs(m.net) / maxAbsNet) * 100)}%`,
-                                backgroundColor: m.net >= 0 ? '#00C9A7' : '#FF6B6B',
+                                backgroundColor: m.net >= 0 ? '#2D7D46' : '#B33A2B',
                                 borderRadius: 999,
                               }}
                             />

@@ -75,8 +75,8 @@ export default function DashboardScreen() {
     datasets: [{ data: monthlyData.map((m) => Math.max(m.expense, 0)) }],
   };
 
-  const netColor = monthlyNet >= 0 ? '#00C9A7' : '#FF6B6B';
-  const netBalanceColor = netBalance >= 0 ? '#00C9A7' : '#FF6B6B';
+  const netColor = monthlyNet >= 0 ? '#2D7D46' : '#B33A2B';
+  const netBalanceColor = netBalance >= 0 ? '#2D7D46' : '#B33A2B';
 
   return (
     <SafeAreaView className="flex-1 bg-surface">
@@ -127,13 +127,13 @@ export default function DashboardScreen() {
             label="Income (Month)"
             value={fmt(monthlyIncome, 0)}
             icon="💚"
-            hexColor="#00C9A7"
+            hexColor="#2D7D46"
           />
           <StatCard
             label="Expenses (Month)"
             value={fmt(monthlyExpense, 0)}
             icon="🔴"
-            hexColor="#FF6B6B"
+            hexColor="#B33A2B"
           />
         </View>
         <View className="flex-row gap-3 px-5 mt-3">
@@ -147,7 +147,7 @@ export default function DashboardScreen() {
             label="Transactions"
             value={String(transactions.length)}
             icon="🧾"
-            hexColor="#6C63FF"
+            hexColor="#F08A00"
           />
         </View>
 
@@ -210,7 +210,7 @@ export default function DashboardScreen() {
                   className="flex-row items-center bg-white rounded-2xl px-4 py-3 mb-2 shadow-sm"
                   style={{
                     borderWidth: 1,
-                    borderColor: isIncome ? '#D1FAF4' : '#F3F4F6',
+                    borderColor: isIncome ? '#E8F3EC' : '#F3F4F6',
                   }}
                 >
                   <View
@@ -227,7 +227,7 @@ export default function DashboardScreen() {
                   </View>
                   <Text
                     className="text-sm font-bold"
-                    style={{ color: isIncome ? '#00C9A7' : '#374151' }}
+                    style={{ color: isIncome ? '#2D7D46' : '#374151' }}
                   >
                     {isIncome ? '+' : '-'}{fmt(t.amount)}
                   </Text>

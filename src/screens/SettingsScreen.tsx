@@ -44,7 +44,7 @@ export default function SettingsScreen() {
               <TouchableOpacity
                 onPress={() => handleSelect(item)}
                 className={`flex-row items-center px-4 py-3.5 ${!isLast ? 'border-b border-gray-50' : ''}`}
-                style={selected ? { backgroundColor: '#EEF0FF' } : {}}
+                style={selected ? { backgroundColor: '#FFEDC9' } : {}}
               >
                 {/* Flag */}
                 <Text className="text-2xl mr-3">{item.flag}</Text>
@@ -53,7 +53,7 @@ export default function SettingsScreen() {
                 <View className="flex-1">
                   <Text
                     className="text-sm font-semibold"
-                    style={{ color: selected ? '#6C63FF' : '#111827' }}
+                    style={{ color: selected ? '#F08A00' : '#111827' }}
                   >
                     {item.name}
                   </Text>
@@ -63,7 +63,7 @@ export default function SettingsScreen() {
                 {/* Symbol */}
                 <Text
                   className="text-base font-bold mr-3"
-                  style={{ color: selected ? '#6C63FF' : '#6B7280' }}
+                  style={{ color: selected ? '#F08A00' : '#6B7280' }}
                 >
                   {item.symbol}
                 </Text>

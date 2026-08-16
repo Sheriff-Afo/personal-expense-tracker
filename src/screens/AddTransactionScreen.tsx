@@ -87,8 +87,8 @@ export default function AddTransactionScreen() {
   };
 
   const isIncome = txType === 'income';
-  const accentColor = isIncome ? '#00C9A7' : '#6C63FF';
-  const accentBg    = isIncome ? '#D1FAF4' : '#EEF0FF';
+  const accentColor = isIncome ? '#2D7D46' : '#F08A00';
+  const accentBg    = isIncome ? '#E8F3EC' : '#FFEDC9';
 
   return (
     <SafeAreaView className="flex-1 bg-surface">
@@ -115,26 +115,26 @@ export default function AddTransactionScreen() {
           <View className="flex-row bg-white rounded-2xl border border-gray-200 p-1 mb-2">
             <TouchableOpacity
               className="flex-1 py-3 rounded-xl items-center flex-row justify-center gap-2"
-              style={txType === 'expense' ? { backgroundColor: '#EEF0FF' } : {}}
+              style={txType === 'expense' ? { backgroundColor: '#FFEDC9' } : {}}
               onPress={() => handleTypeChange('expense')}
             >
               <Text className="text-lg">🔴</Text>
               <Text
                 className="font-bold text-sm"
-                style={{ color: txType === 'expense' ? '#6C63FF' : '#9CA3AF' }}
+                style={{ color: txType === 'expense' ? '#F08A00' : '#9CA3AF' }}
               >
                 Expense
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
               className="flex-1 py-3 rounded-xl items-center flex-row justify-center gap-2"
-              style={txType === 'income' ? { backgroundColor: '#D1FAF4' } : {}}
+              style={txType === 'income' ? { backgroundColor: '#E8F3EC' } : {}}
               onPress={() => handleTypeChange('income')}
             >
               <Text className="text-lg">💚</Text>
               <Text
                 className="font-bold text-sm"
-                style={{ color: txType === 'income' ? '#00C9A7' : '#9CA3AF' }}
+                style={{ color: txType === 'income' ? '#2D7D46' : '#9CA3AF' }}
               >
                 Income
               </Text>

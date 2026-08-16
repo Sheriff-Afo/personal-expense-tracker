@@ -32,8 +32,8 @@ export default function ExpenseCard({ expense, onEdit, onDelete }: Props) {
     year: 'numeric',
   });
 
-  const amountColor = isIncome ? '#00C9A7' : '#374151';
-  const borderColor = isIncome ? '#D1FAF4' : '#F3F4F6';
+  const amountColor = isIncome ? '#2D7D46' : '#374151';
+  const borderColor = isIncome ? '#E8F3EC' : '#F3F4F6';
 
   return (
     <View
@@ -57,11 +57,11 @@ export default function ExpenseCard({ expense, onEdit, onDelete }: Props) {
           {/* Type badge */}
           <View
             className="px-2 py-0.5 rounded-full"
-            style={{ backgroundColor: isIncome ? '#D1FAF4' : '#FEE2E2' }}
+            style={{ backgroundColor: isIncome ? '#E8F3EC' : '#FBE7E3' }}
           >
             <Text
               className="text-xs font-bold"
-              style={{ color: isIncome ? '#00C9A7' : '#EF4444' }}
+              style={{ color: isIncome ? '#2D7D46' : '#B33A2B' }}
             >
               {isIncome ? '↑ Income' : '↓ Expense'}
             </Text>

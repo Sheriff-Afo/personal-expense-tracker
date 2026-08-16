@@ -18,7 +18,7 @@ export default function App() {
     return (
       <View className="flex-1 items-center justify-center bg-surface">
         <Text className="text-4xl mb-4">💰</Text>
-        <ActivityIndicator size="large" color="#6C63FF" />
+        <ActivityIndicator size="large" color="#F08A00" />
         <Text className="text-gray-500 mt-3 text-sm">Loading Expense Tracker…</Text>
       </View>
     );
