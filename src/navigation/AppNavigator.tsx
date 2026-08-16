@@ -1,14 +1,39 @@
-import React from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
+/**
+ * AppNavigator
+ * ─────────────────────────────────────────────────────────────────────────────
+ * Flip flags in src/config/featureFlags.ts — nothing else to change.
+ *
+ * USE_DRAWER_NAVIGATOR
+ *   true  → bottom tab bar is hidden; a ☰ menu bar appears at the top and
+ *           slides in a custom drawer (Modal + RN built-in Animated — no
+ *           @react-navigation/drawer, no reanimated, no worklets)
+ *   false → normal bottom tab bar
+ *
+ * USE_MATERIAL_TOP_TABS_FOR_TRANSACTIONS
+ *   true  → swipeable All / Income / Expenses tabs inside Transactions
+ *   false → original button-filter UI
+ *
+ * Both flags are independent and can be combined freely.
+ */
+
+import React, { useEffect, useRef, useState } from 'react';
+import {
+  Animated,
+  Modal,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
+  View,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { NavigationContainer } from '@react-navigation/native';
+import {
+  CommonActions,
+  createNavigationContainerRef,
+  NavigationContainer,
+} from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import {
-  createDrawerNavigator,
-  DrawerContentScrollView,
-  DrawerContentComponentProps,
-} from '@react-navigation/drawer';
 import { RootStackParamList, TabParamList } from '../types';
 import DashboardScreen from '../screens/DashboardScreen';
 import TransactionsScreen from '../screens/TransactionsScreen';
@@ -17,26 +42,189 @@ import AnalyticsScreen from '../screens/AnalyticsScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import AddTransactionScreen from '../screens/AddTransactionScreen';
 import EditTransactionScreen from '../screens/EditTransactionScreen';
-// ─── Navigation feature flags ─────────────────────────────────────────────────
-// Edit src/config/featureFlags.ts — that file is the ONLY thing to change.
 import { FLAGS } from '../config/featureFlags';
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Shared helpers
-// ─────────────────────────────────────────────────────────────────────────────
-
+// ─── Navigator instances ───────────────────────────────────────────────────────
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab   = createBottomTabNavigator<TabParamList>();
-const Drawer = createDrawerNavigator<TabParamList>();
 
-/** Picks the right Transactions component based on the top-tabs flag. */
+// Root nav ref — lets the custom drawer navigate to any tab without needing
+// useNavigation() (which requires being inside a navigator context).
+const navigationRef = createNavigationContainerRef<RootStackParamList>();
+
+// Transactions screen — controlled by USE_MATERIAL_TOP_TABS_FOR_TRANSACTIONS
 const TransactionsComponent = FLAGS.USE_MATERIAL_TOP_TABS_FOR_TRANSACTIONS
   ? TransactionsTopTabsScreen
   : TransactionsScreen;
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Bottom Tab Navigator  (FLAGS.USE_DRAWER_NAVIGATOR = false)
-// ─────────────────────────────────────────────────────────────────────────────
+// ─── Custom Drawer (Modal + built-in Animated) ────────────────────────────────
+// Deliberately avoids @react-navigation/drawer and react-native-reanimated so
+// that react-native-worklets is never initialised. The TurboModule arity
+// mismatch in Expo Go (NativeWorklets.installTurboModule expects 0 args but
+// react-native-worklets@0.8.3 passes 1) only surfaces once reanimated is
+// imported. This implementation uses only React Native core APIs.
+
+const DRAWER_WIDTH = 285;
+
+const DRAWER_ITEMS: { name: keyof TabParamList; icon: string; label: string }[] = [
+  { name: 'Dashboard',    icon: '📊', label: 'Dashboard'   },
+  { name: 'Transactions', icon: '💳', label: 'Transactions' },
+  { name: 'Analytics',    icon: '📈', label: 'Analytics'   },
+  { name: 'Settings',     icon: '⚙️', label: 'Settings'    },
+];
+
+interface DrawerProps {
+  visible: boolean;
+  onClose: () => void;
+}
+
+function AppDrawer({ visible, onClose }: DrawerProps) {
+  const { top: topInset } = useSafeAreaInsets();
+  const slideAnim = useRef(new Animated.Value(-DRAWER_WIDTH)).current;
+  const fadeAnim  = useRef(new Animated.Value(0)).current;
+  // Keep the Modal mounted during the close animation
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    if (visible) {
+      setMounted(true);
+      Animated.parallel([
+        Animated.timing(slideAnim, { toValue: 0,              duration: 240, useNativeDriver: true }),
+        Animated.timing(fadeAnim,  { toValue: 1,              duration: 240, useNativeDriver: true }),
+      ]).start();
+    } else {
+      Animated.parallel([
+        Animated.timing(slideAnim, { toValue: -DRAWER_WIDTH,  duration: 200, useNativeDriver: true }),
+        Animated.timing(fadeAnim,  { toValue: 0,              duration: 200, useNativeDriver: true }),
+      ]).start(() => setMounted(false));
+    }
+  }, [visible]);
+
+  if (!mounted) return null;
+
+  const navigateTo = (screen: keyof TabParamList) => {
+    onClose();
+    // Short delay so the close animation starts before navigation re-renders
+    setTimeout(() => {
+      if (navigationRef.isReady()) {
+        navigationRef.dispatch(
+          CommonActions.navigate({ name: screen as string }),
+        );
+      }
+    }, 50);
+  };
+
+  return (
+    <Modal visible transparent animationType="none" onRequestClose={onClose}>
+      <View style={StyleSheet.absoluteFill}>
+        {/* Dim overlay — tapping it closes the drawer */}
+        <TouchableWithoutFeedback onPress={onClose}>
+          <Animated.View
+            style={[
+              StyleSheet.absoluteFill,
+              {
+                backgroundColor: '#000',
+                opacity: fadeAnim.interpolate({
+                  inputRange:  [0, 1],
+                  outputRange: [0, 0.45],
+                }),
+              },
+            ]}
+          />
+        </TouchableWithoutFeedback>
+
+        {/* Drawer panel */}
+        <Animated.View
+          style={{
+            position: 'absolute',
+            left: 0, top: 0, bottom: 0,
+            width: DRAWER_WIDTH,
+            backgroundColor: '#fff',
+            transform: [{ translateX: slideAnim }],
+          }}
+        >
+          {/* Purple branding strip */}
+          <View
+            style={{
+              backgroundColor: '#6C63FF',
+              paddingHorizontal: 20,
+              paddingTop: topInset + 24,
+              paddingBottom: 28,
+              marginBottom: 12,
+            }}
+          >
+            <Text style={{ fontSize: 32, marginBottom: 8 }}>💰</Text>
+            <Text style={{ fontSize: 20, fontWeight: '800', color: '#fff', letterSpacing: -0.3 }}>
+              ExpenseTracker
+            </Text>
+            <Text style={{ fontSize: 12, color: 'rgba(255,255,255,0.65)', marginTop: 3 }}>
+              Personal Finance
+            </Text>
+          </View>
+
+          {/* Nav items */}
+          {DRAWER_ITEMS.map((item) => (
+            <TouchableOpacity
+              key={item.name}
+              onPress={() => navigateTo(item.name)}
+              activeOpacity={0.7}
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                marginHorizontal: 12,
+                marginVertical: 2,
+                paddingHorizontal: 16,
+                paddingVertical: 14,
+                borderRadius: 12,
+              }}
+            >
+              <Text style={{ fontSize: 22, marginRight: 14 }}>{item.icon}</Text>
+              <Text style={{ fontSize: 15, fontWeight: '700', color: '#374151' }}>
+                {item.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+
+          {/* Footer hint */}
+          <View style={{ flex: 1, justifyContent: 'flex-end', paddingHorizontal: 20, paddingBottom: 24 }}>
+            <Text style={{ fontSize: 11, color: '#D1D5DB' }}>
+              Tap ☰ in the top bar to reopen this menu
+            </Text>
+          </View>
+        </Animated.View>
+      </View>
+    </Modal>
+  );
+}
+
+// ─── Menu bar (shown above content when drawer mode is active) ────────────────
+
+function MenuBar({ onOpen }: { onOpen: () => void }) {
+  const { top } = useSafeAreaInsets();
+  return (
+    <View
+      style={{
+        backgroundColor: '#F8F9FB',
+        paddingTop: top + 4,
+        paddingBottom: 10,
+        paddingHorizontal: 16,
+        flexDirection: 'row',
+        alignItems: 'center',
+        borderBottomWidth: 1,
+        borderBottomColor: '#E5E7EB',
+      }}
+    >
+      <TouchableOpacity onPress={onOpen} style={{ padding: 6, marginRight: 10 }} accessibilityLabel="Open menu">
+        <Text style={{ fontSize: 22, color: '#6C63FF' }}>☰</Text>
+      </TouchableOpacity>
+      <Text style={{ fontSize: 17, fontWeight: '800', color: '#111827', letterSpacing: -0.3 }}>
+        ExpenseTracker
+      </Text>
+    </View>
+  );
+}
+
+// ─── Bottom Tab Navigator (FLAGS.USE_DRAWER_NAVIGATOR = false) ────────────────
 
 function TabIcon({ icon, focused }: { icon: string; focused: boolean }) {
   return (
@@ -48,192 +236,74 @@ function TabIcon({ icon, focused }: { icon: string; focused: boolean }) {
 
 function MainTabs() {
   const { bottom: bottomInset } = useSafeAreaInsets();
+  const [drawerOpen, setDrawerOpen] = useState(false);
+
   const TAB_CONTENT_HEIGHT = 56;
   const TAB_PADDING_TOP    = 6;
   const TAB_PADDING_BOTTOM = 8;
 
   return (
-    <Tab.Navigator
-      screenOptions={{
-        headerShown: false,
-        tabBarStyle: {
-          backgroundColor: '#FFFFFF',
-          borderTopColor: '#E5E7EB',
-          borderTopWidth: 1,
-          height: TAB_CONTENT_HEIGHT + TAB_PADDING_TOP + bottomInset,
-          paddingTop: TAB_PADDING_TOP,
-          paddingBottom: bottomInset > 0 ? bottomInset : TAB_PADDING_BOTTOM,
-        },
-        tabBarActiveTintColor: '#6C63FF',
-        tabBarInactiveTintColor: '#9CA3AF',
-        tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },
-      }}
-    >
-      <Tab.Screen
-        name="Dashboard"
-        component={DashboardScreen}
-        options={{ tabBarIcon: ({ focused }) => <TabIcon icon="📊" focused={focused} /> }}
-      />
-      <Tab.Screen
-        name="Transactions"
-        component={TransactionsComponent}  // ← controlled by featureFlags.ts
-        options={{ tabBarIcon: ({ focused }) => <TabIcon icon="💳" focused={focused} /> }}
-      />
-      <Tab.Screen
-        name="Analytics"
-        component={AnalyticsScreen}
-        options={{ tabBarIcon: ({ focused }) => <TabIcon icon="📈" focused={focused} /> }}
-      />
-      <Tab.Screen
-        name="Settings"
-        component={SettingsScreen}
-        options={{ tabBarIcon: ({ focused }) => <TabIcon icon="⚙️" focused={focused} /> }}
-      />
-    </Tab.Navigator>
-  );
-}
+    <View style={{ flex: 1 }}>
+      {/* ── Menu bar (only when drawer mode is active) ── */}
+      {FLAGS.USE_DRAWER_NAVIGATOR && (
+        <MenuBar onOpen={() => setDrawerOpen(true)} />
+      )}
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Drawer Navigator  (FLAGS.USE_DRAWER_NAVIGATOR = true)
-// ─────────────────────────────────────────────────────────────────────────────
-
-const DRAWER_ITEMS: { name: keyof TabParamList; icon: string; label: string }[] = [
-  { name: 'Dashboard',    icon: '📊', label: 'Dashboard'   },
-  { name: 'Transactions', icon: '💳', label: 'Transactions' },
-  { name: 'Analytics',    icon: '📈', label: 'Analytics'   },
-  { name: 'Settings',     icon: '⚙️', label: 'Settings'    },
-];
-
-function CustomDrawerContent({ state, navigation }: DrawerContentComponentProps) {
-  const { top: topInset } = useSafeAreaInsets();
-
-  return (
-    <DrawerContentScrollView
-      scrollEnabled={false}
-      contentContainerStyle={{ flex: 1, paddingTop: 0 }}
-    >
-      {/* ── Branding strip ── */}
-      <View
-        style={{
-          backgroundColor: '#6C63FF',
-          paddingHorizontal: 20,
-          paddingTop: topInset + 24,
-          paddingBottom: 28,
-          marginBottom: 12,
+      <Tab.Navigator
+        screenOptions={{
+          headerShown: false,
+          tabBarStyle: FLAGS.USE_DRAWER_NAVIGATOR
+            ? { display: 'none' }   // hide the tab bar; drawer replaces it
+            : {
+                backgroundColor: '#FFFFFF',
+                borderTopColor: '#E5E7EB',
+                borderTopWidth: 1,
+                height: TAB_CONTENT_HEIGHT + TAB_PADDING_TOP + bottomInset,
+                paddingTop: TAB_PADDING_TOP,
+                paddingBottom: bottomInset > 0 ? bottomInset : TAB_PADDING_BOTTOM,
+              },
+          tabBarActiveTintColor:   '#6C63FF',
+          tabBarInactiveTintColor: '#9CA3AF',
+          tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },
         }}
       >
-        <Text style={{ fontSize: 32, marginBottom: 8 }}>💰</Text>
-        <Text style={{ fontSize: 20, fontWeight: '800', color: '#fff', letterSpacing: -0.3 }}>
-          ExpenseTracker
-        </Text>
-        <Text style={{ fontSize: 12, color: 'rgba(255,255,255,0.65)', marginTop: 3 }}>
-          Personal Finance
-        </Text>
-      </View>
+        <Tab.Screen
+          name="Dashboard"
+          component={DashboardScreen}
+          options={{ tabBarIcon: ({ focused }) => <TabIcon icon="📊" focused={focused} /> }}
+        />
+        <Tab.Screen
+          name="Transactions"
+          component={TransactionsComponent}
+          options={{ tabBarIcon: ({ focused }) => <TabIcon icon="💳" focused={focused} /> }}
+        />
+        <Tab.Screen
+          name="Analytics"
+          component={AnalyticsScreen}
+          options={{ tabBarIcon: ({ focused }) => <TabIcon icon="📈" focused={focused} /> }}
+        />
+        <Tab.Screen
+          name="Settings"
+          component={SettingsScreen}
+          options={{ tabBarIcon: ({ focused }) => <TabIcon icon="⚙️" focused={focused} /> }}
+        />
+      </Tab.Navigator>
 
-      {/* ── Nav items ── */}
-      {DRAWER_ITEMS.map((item, index) => {
-        const isFocused = state.index === index;
-        return (
-          <TouchableOpacity
-            key={item.name}
-            onPress={() => navigation.navigate(item.name)}
-            activeOpacity={0.7}
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              marginHorizontal: 12,
-              marginVertical: 2,
-              paddingHorizontal: 16,
-              paddingVertical: 14,
-              borderRadius: 12,
-              backgroundColor: isFocused ? '#EEF0FF' : 'transparent',
-            }}
-          >
-            {/* Active indicator pill on the left edge */}
-            {isFocused && (
-              <View
-                style={{
-                  position: 'absolute',
-                  left: 0,
-                  top: 10,
-                  bottom: 10,
-                  width: 3,
-                  backgroundColor: '#6C63FF',
-                  borderRadius: 2,
-                }}
-              />
-            )}
-            <Text style={{ fontSize: 22, marginRight: 14 }}>{item.icon}</Text>
-            <Text
-              style={{
-                fontSize: 15,
-                fontWeight: '700',
-                color: isFocused ? '#6C63FF' : '#374151',
-              }}
-            >
-              {item.label}
-            </Text>
-          </TouchableOpacity>
-        );
-      })}
-
-      {/* ── Footer hint ── */}
-      <View style={{ flex: 1, justifyContent: 'flex-end', paddingHorizontal: 20, paddingBottom: 24 }}>
-        <Text style={{ fontSize: 11, color: '#D1D5DB' }}>
-          Swipe right from the left edge to open this menu
-        </Text>
-      </View>
-    </DrawerContentScrollView>
+      {/* ── Custom drawer overlay (only when drawer mode is active) ── */}
+      {FLAGS.USE_DRAWER_NAVIGATOR && (
+        <AppDrawer visible={drawerOpen} onClose={() => setDrawerOpen(false)} />
+      )}
+    </View>
   );
 }
 
-function MainDrawer() {
-  return (
-    <Drawer.Navigator
-      drawerContent={(props) => <CustomDrawerContent {...props} />}
-      screenOptions={{
-        // Each screen owns its own header row — hide the drawer's auto-header
-        // to avoid a doubled title. Users open the drawer by swiping from the
-        // left edge (swipeEdgeWidth below) or via a button you can add to any
-        // screen with: const nav = useNavigation(); nav.openDrawer()
-        headerShown: false,
-        drawerStyle: {
-          backgroundColor: '#fff',
-          width: 285,
-        },
-        // 'front' slides the drawer over the content (most common on Android)
-        // 'slide' pushes the content sideways — try both and see which you prefer
-        drawerType: 'front',
-        overlayColor: 'rgba(0, 0, 0, 0.45)',
-        // How many pixels from the left edge count as a swipe open gesture
-        swipeEdgeWidth: 60,
-      }}
-    >
-      <Drawer.Screen name="Dashboard"    component={DashboardScreen} />
-      <Drawer.Screen
-        name="Transactions"
-        component={TransactionsComponent}  // ← same flag as bottom tabs
-      />
-      <Drawer.Screen name="Analytics"    component={AnalyticsScreen} />
-      <Drawer.Screen name="Settings"     component={SettingsScreen} />
-    </Drawer.Navigator>
-  );
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Root Stack (wraps whichever main nav is active + modal screens)
-// ─────────────────────────────────────────────────────────────────────────────
+// ─── Root Stack ───────────────────────────────────────────────────────────────
 
 export default function AppNavigator() {
   return (
-    <NavigationContainer>
+    <NavigationContainer ref={navigationRef}>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
-        {/* ← Flip USE_DRAWER_NAVIGATOR in src/config/featureFlags.ts */}
-        <Stack.Screen
-          name="MainTabs"
-          component={FLAGS.USE_DRAWER_NAVIGATOR ? MainDrawer : MainTabs}
-        />
+        <Stack.Screen name="MainTabs" component={MainTabs} />
         <Stack.Screen
           name="AddTransaction"
           component={AddTransactionScreen}
