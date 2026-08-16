@@ -15,6 +15,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { updateExpense } from '../storage/expenseStorage';
 import { TransactionType, RootStackParamList } from '../types';
 import CategoryPicker from '../components/CategoryPicker';
+import { useCurrency } from '../context/CurrencyContext';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 type Route = RouteProp<RootStackParamList, 'EditTransaction'>;
@@ -39,6 +40,7 @@ export default function EditTransactionScreen() {
   const [description, setDescription] = useState(transaction.description ?? '');
   const [errors, setErrors] = useState<FormErrors>({});
   const [saving, setSaving] = useState(false);
+  const { sym } = useCurrency();
 
   // Reset category when switching type
   const handleTypeChange = (type: TransactionType) => {
@@ -156,7 +158,7 @@ export default function EditTransactionScreen() {
           {errors.title ? <ErrorText text={errors.title} /> : null}
 
           {/* Amount */}
-          <Label text="Amount ($) *" />
+          <Label text={`Amount (${sym}) *`} />
           <TextInput
             className={`bg-white border rounded-xl px-4 py-3 text-base text-gray-900 mb-1 ${
               errors.amount ? 'border-red-400' : 'border-gray-200'

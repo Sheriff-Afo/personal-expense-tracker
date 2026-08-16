@@ -31,4 +31,5 @@ export type TabParamList = {
   Dashboard: undefined;
   Transactions: undefined;
   Analytics: undefined;
+  Settings: undefined;
 };

@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, Alert } from 'react-native';
 import { Transaction } from '../types';
 import { getCategoryMeta } from '../constants/categories';
+import { useCurrency } from '../context/CurrencyContext';
 
 interface Props {
   expense: Transaction;
@@ -11,6 +12,7 @@ interface Props {
 
 export default function ExpenseCard({ expense, onEdit, onDelete }: Props) {
   const meta = getCategoryMeta(expense.category);
+  const { fmt } = useCurrency();
   const isIncome = expense.type === 'income';
 
   const handleDelete = () => {
@@ -85,7 +87,7 @@ export default function ExpenseCard({ expense, onEdit, onDelete }: Props) {
       {/* Amount + actions */}
       <View className="items-end">
         <Text className="text-lg font-bold mb-1" style={{ color: amountColor }}>
-          {isIncome ? '+' : '-'}${expense.amount.toFixed(2)}
+          {isIncome ? '+' : '-'}{fmt(expense.amount)}
         </Text>
         <View className="flex-row gap-1">
           <TouchableOpacity

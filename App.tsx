@@ -5,6 +5,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import AppNavigator from './src/navigation/AppNavigator';
 import { seedDemoData } from './src/storage/expenseStorage';
+import { CurrencyProvider } from './src/context/CurrencyContext';
 
 export default function App() {
   const [ready, setReady] = useState(false);
@@ -24,9 +25,11 @@ export default function App() {
   }
 
   return (
-    <SafeAreaProvider>
-      <StatusBar style="dark" />
-      <AppNavigator />
-    </SafeAreaProvider>
+    <CurrencyProvider>
+      <SafeAreaProvider>
+        <StatusBar style="dark" />
+        <AppNavigator />
+      </SafeAreaProvider>
+    </CurrencyProvider>
   );
 }

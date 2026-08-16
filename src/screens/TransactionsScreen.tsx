@@ -13,6 +13,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { loadExpenses, deleteExpense } from '../storage/expenseStorage';
 import { Transaction, TransactionType, RootStackParamList } from '../types';
 import { EXPENSE_CATEGORY_LABELS, INCOME_CATEGORY_LABELS } from '../constants/categories';
+import { useCurrency } from '../context/CurrencyContext';
 import ExpenseCard from '../components/ExpenseCard';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
@@ -25,6 +26,7 @@ export default function TransactionsScreen() {
   const [typeFilter, setTypeFilter] = useState<TypeFilter>('all');
   const [selectedCat, setSelectedCat] = useState('');
   const [refreshing, setRefreshing] = useState(false);
+  const { fmt } = useCurrency();
 
   const load = useCallback(async () => {
     setTransactions(await loadExpenses());
@@ -159,13 +161,13 @@ export default function TransactionsScreen() {
             className="text-sm font-bold"
             style={{ color: net >= 0 ? '#00C9A7' : '#FF6B6B' }}
           >
-            Net: {net >= 0 ? '+' : '-'}${Math.abs(net).toFixed(2)}
+            Net: {net >= 0 ? '+' : '-'}{fmt(Math.abs(net))}
           </Text>
         </View>
         {(totalIncome > 0 || totalExpense > 0) && (
           <View className="flex-row justify-between mt-1.5">
-            <Text className="text-xs text-success font-semibold">+${totalIncome.toFixed(2)} income</Text>
-            <Text className="text-xs text-danger font-semibold">-${totalExpense.toFixed(2)} expenses</Text>
+            <Text className="text-xs text-success font-semibold">+{fmt(totalIncome)} income</Text>
+            <Text className="text-xs text-danger font-semibold">-{fmt(totalExpense)} expenses</Text>
           </View>
         )}
       </View>

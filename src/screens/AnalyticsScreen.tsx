@@ -6,6 +6,7 @@ import { LineChart, PieChart } from 'react-native-chart-kit';
 import { loadExpenses } from '../storage/expenseStorage';
 import { Transaction } from '../types';
 import { getCategoryMeta, EXPENSE_CATEGORIES, INCOME_CATEGORIES } from '../constants/categories';
+import { useCurrency } from '../context/CurrencyContext';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -27,6 +28,7 @@ function getMonthlyData(transactions: Transaction[]) {
 export default function AnalyticsScreen() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [refreshing, setRefreshing] = useState(false);
+  const { sym, fmt } = useCurrency();
 
   const load = useCallback(async () => {
     setTransactions(await loadExpenses());
@@ -120,11 +122,11 @@ export default function AnalyticsScreen() {
         {/* Top summary row */}
         <View className="flex-row gap-3 px-5 mb-3">
           <View className="flex-1 bg-white rounded-2xl p-4 border border-gray-100 shadow-sm items-center">
-            <Text className="text-lg font-extrabold text-success">+${totalIncome.toFixed(0)}</Text>
+            <Text className="text-lg font-extrabold text-success">+{fmt(totalIncome, 0)}</Text>
             <Text className="text-xs text-gray-500 mt-1">Total Income</Text>
           </View>
           <View className="flex-1 bg-white rounded-2xl p-4 border border-gray-100 shadow-sm items-center">
-            <Text className="text-lg font-extrabold text-danger">-${totalExpense.toFixed(0)}</Text>
+            <Text className="text-lg font-extrabold text-danger">-{fmt(totalExpense, 0)}</Text>
             <Text className="text-xs text-gray-500 mt-1">Total Spent</Text>
           </View>
         </View>
@@ -136,7 +138,7 @@ export default function AnalyticsScreen() {
               className="text-lg font-extrabold"
               style={{ color: netBalance >= 0 ? '#00C9A7' : '#FF6B6B' }}
             >
-              {netBalance >= 0 ? '+' : '-'}${Math.abs(netBalance).toFixed(0)}
+              {netBalance >= 0 ? '+' : '-'}{fmt(Math.abs(netBalance), 0)}
             </Text>
             <Text className="text-xs text-gray-500 mt-1">Net Balance</Text>
           </View>
@@ -161,7 +163,7 @@ export default function AnalyticsScreen() {
                 data={dualLineData}
                 width={SCREEN_WIDTH - 72}
                 height={200}
-                yAxisLabel="$"
+                yAxisLabel={sym}
                 yAxisSuffix=""
                 chartConfig={{
                   backgroundColor: '#fff',
@@ -244,7 +246,7 @@ export default function AnalyticsScreen() {
                     </View>
                     <View className="flex-row items-center gap-2">
                       <Text className="text-xs text-gray-400">{pct.toFixed(1)}%</Text>
-                      <Text className="text-sm font-bold text-gray-900">${amt.toFixed(2)}</Text>
+                      <Text className="text-sm font-bold text-gray-900">{fmt(amt)}</Text>
                     </View>
                   </View>
                   <View className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
@@ -275,7 +277,7 @@ export default function AnalyticsScreen() {
                     </View>
                     <View className="flex-row items-center gap-2">
                       <Text className="text-xs text-gray-400">{pct.toFixed(1)}%</Text>
-                      <Text className="text-sm font-bold text-success">${amt.toFixed(2)}</Text>
+                      <Text className="text-sm font-bold text-success">{fmt(amt)}</Text>
                     </View>
                   </View>
                   <View className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
@@ -293,7 +295,7 @@ export default function AnalyticsScreen() {
         {/* Stats row */}
         <View className="flex-row gap-3 px-5 mb-5">
           <View className="flex-1 bg-white rounded-2xl p-4 border border-gray-100 shadow-sm items-center">
-            <Text className="text-lg font-extrabold text-primary">${avgExpense.toFixed(0)}</Text>
+            <Text className="text-lg font-extrabold text-primary">{fmt(avgExpense, 0)}</Text>
             <Text className="text-xs text-gray-500 mt-1">Avg / Expense</Text>
           </View>
           <View className="flex-1 bg-white rounded-2xl p-4 border border-gray-100 shadow-sm items-center">
@@ -320,7 +322,7 @@ export default function AnalyticsScreen() {
                 <Text className="text-xs text-gray-500">{highest.category} · {highest.date}</Text>
               </View>
               <Text className="text-lg font-extrabold text-danger">
-                ${highest.amount.toFixed(2)}
+                {fmt(highest.amount)}
               </Text>
             </View>
           </View>

@@ -14,6 +14,7 @@ import { BarChart } from 'react-native-chart-kit';
 import { loadExpenses } from '../storage/expenseStorage';
 import { Transaction, RootStackParamList } from '../types';
 import { getCategoryMeta } from '../constants/categories';
+import { useCurrency } from '../context/CurrencyContext';
 import StatCard from '../components/StatCard';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
@@ -39,6 +40,7 @@ export default function DashboardScreen() {
   const navigation = useNavigation<Nav>();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [refreshing, setRefreshing] = useState(false);
+  const { sym, fmt } = useCurrency();
 
   const load = useCallback(async () => {
     setTransactions(await loadExpenses());
@@ -68,7 +70,6 @@ export default function DashboardScreen() {
 
   const monthlyData = getMonthlyData(transactions);
 
-  // Bar chart: monthly net balance
   const chartData = {
     labels: monthlyData.map((m) => m.label),
     datasets: [{ data: monthlyData.map((m) => Math.max(m.expense, 0)) }],
@@ -105,17 +106,17 @@ export default function DashboardScreen() {
         <View className="mx-5 mt-3 bg-white rounded-2xl p-5 border border-gray-100 shadow-sm items-center">
           <Text className="text-sm text-gray-500 mb-1">Net Balance (All Time)</Text>
           <Text className="text-4xl font-extrabold" style={{ color: netBalanceColor }}>
-            {netBalance >= 0 ? '+' : '-'}${Math.abs(netBalance).toFixed(2)}
+            {netBalance >= 0 ? '+' : '-'}{fmt(Math.abs(netBalance))}
           </Text>
           <View className="flex-row gap-6 mt-3">
             <View className="items-center">
               <Text className="text-xs text-gray-400 mb-0.5">Total Income</Text>
-              <Text className="text-base font-bold text-success">+${totalIncome.toFixed(0)}</Text>
+              <Text className="text-base font-bold text-success">+{fmt(totalIncome, 0)}</Text>
             </View>
             <View className="w-px bg-gray-100" />
             <View className="items-center">
               <Text className="text-xs text-gray-400 mb-0.5">Total Expenses</Text>
-              <Text className="text-base font-bold text-danger">-${totalExpense.toFixed(0)}</Text>
+              <Text className="text-base font-bold text-danger">-{fmt(totalExpense, 0)}</Text>
             </View>
           </View>
         </View>
@@ -124,13 +125,13 @@ export default function DashboardScreen() {
         <View className="flex-row gap-3 px-5 mt-3">
           <StatCard
             label="Income (Month)"
-            value={`$${monthlyIncome.toFixed(0)}`}
+            value={fmt(monthlyIncome, 0)}
             icon="💚"
             hexColor="#00C9A7"
           />
           <StatCard
             label="Expenses (Month)"
-            value={`$${monthlyExpense.toFixed(0)}`}
+            value={fmt(monthlyExpense, 0)}
             icon="🔴"
             hexColor="#FF6B6B"
           />
@@ -138,7 +139,7 @@ export default function DashboardScreen() {
         <View className="flex-row gap-3 px-5 mt-3">
           <StatCard
             label="Net (Month)"
-            value={`${monthlyNet >= 0 ? '+' : '-'}$${Math.abs(monthlyNet).toFixed(0)}`}
+            value={`${monthlyNet >= 0 ? '+' : '-'}${fmt(Math.abs(monthlyNet), 0)}`}
             icon={monthlyNet >= 0 ? '🎯' : '⚠️'}
             hexColor={netColor}
           />
@@ -158,7 +159,7 @@ export default function DashboardScreen() {
             data={chartData}
             width={SCREEN_WIDTH - 72}
             height={180}
-            yAxisLabel="$"
+            yAxisLabel={sym}
             yAxisSuffix=""
             chartConfig={{
               backgroundColor: '#fff',
@@ -228,7 +229,7 @@ export default function DashboardScreen() {
                     className="text-sm font-bold"
                     style={{ color: isIncome ? '#00C9A7' : '#374151' }}
                   >
-                    {isIncome ? '+' : '-'}${t.amount.toFixed(2)}
+                    {isIncome ? '+' : '-'}{fmt(t.amount)}
                   </Text>
                 </View>
               );
