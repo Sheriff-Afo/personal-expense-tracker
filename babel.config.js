@@ -6,13 +6,11 @@ module.exports = function (api) {
         'babel-preset-expo',
         {
           jsxImportSource: 'nativewind',
-          // Prevent babel-preset-expo from loading react-native-worklets/plugin.
-          // We provide a no-op stub so react-native-css-interop/babel.js can
-          // require() it without error, but we don't want the real worklet
-          // transform (there are no 'worklet' directives in this codebase).
+          // Prevent babel-preset-expo from auto-loading react-native-worklets/plugin
+          // a second time. nativewind/babel (via react-native-css-interop/babel.js)
+          // already includes the worklets plugin in its own plugin list.
+          // Double-loading the same Babel plugin causes transform conflicts.
           worklets: false,
-          // Let babel-preset-expo auto-load react-native-reanimated/plugin —
-          // NativeWind (react-native-css-interop) uses reanimated v3 at runtime.
         },
       ],
       'nativewind/babel',
